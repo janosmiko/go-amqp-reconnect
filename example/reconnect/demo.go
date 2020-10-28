@@ -13,7 +13,7 @@ import (
 func main() {
 	rabbitmq.Debug = true
 
-	conn, err := rabbitmq.Dial("amqp://127.0.0.1:5672")
+	conn, err := rabbitmq.Dial("amqp://guest:guest@127.0.0.1:5672")
 	if err != nil {
 		log.Panic(err)
 	}

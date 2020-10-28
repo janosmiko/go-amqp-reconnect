@@ -67,6 +67,11 @@ func (c *Connection) Channel() (*Channel, error) {
 
 // Dial wrap amqp.Dial, dial and get a reconnect connection
 func Dial(url string) (*Connection, error) {
+	return DialConfig(url, amqp.Config{})
+}
+
+//DialConfig dial and get a reconnect connection with config
+func DialConfig(url string, config amqp.Config) (*Connection, error) {
 	conn, err := amqp.Dial(url)
 	if err != nil {
 		return nil, err
@@ -91,7 +96,7 @@ func Dial(url string) (*Connection, error) {
 				// wait 1s for reconnect
 				time.Sleep(Delay * time.Second)
 
-				conn, err := amqp.Dial(url)
+				conn, err := amqp.DialConfig(url, config)
 				if err == nil {
 					connection.Connection = conn
 					logrus.Info("reconnect success")
