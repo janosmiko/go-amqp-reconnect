@@ -5,10 +5,17 @@ import (
 
 	"sync/atomic"
 
+	"github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 )
 
-const delay = 3 // reconnect after delay seconds
+//Delay reconnect after delay seconds
+var Delay time.Duration = 3
+
+//MaxRetry max retry
+var MaxRetry = 100000000
+
+var current = 0
 
 // Connection amqp.Connection wrapper
 type Connection struct {
@@ -31,25 +38,25 @@ func (c *Connection) Channel() (*Channel, error) {
 			reason, ok := <-channel.Channel.NotifyClose(make(chan *amqp.Error))
 			// exit this goroutine if closed by developer
 			if !ok || channel.IsClosed() {
-				debug("channel closed")
+				logrus.Info("channel closed")
 				channel.Close() // close again, ensure closed flag set when connection closed
 				break
 			}
-			debug("channel closed, reason: %v", reason)
+			logrus.Errorf("channel closed, reason: %v", reason)
 
 			// reconnect if not closed by developer
 			for {
 				// wait 1s for connection reconnect
-				time.Sleep(delay * time.Second)
+				time.Sleep(Delay * time.Second)
 
 				ch, err := c.Connection.Channel()
 				if err == nil {
-					debug("channel recreate success")
+					logrus.Info("channel recreate success")
 					channel.Channel = ch
 					break
 				}
 
-				debugf("channel recreate failed, err: %v", err)
+				logrus.Errorf("channel recreate failed, err: %v", err)
 			}
 		}
 
@@ -74,24 +81,24 @@ func Dial(url string) (*Connection, error) {
 			reason, ok := <-connection.Connection.NotifyClose(make(chan *amqp.Error))
 			// exit this goroutine if closed by developer
 			if !ok {
-				debug("connection closed")
+				logrus.Info("connection closed")
 				break
 			}
-			debugf("connection closed, reason: %v", reason)
+			logrus.Errorf("connection closed, reason: %v", reason)
 
 			// reconnect if not closed by developer
 			for {
 				// wait 1s for reconnect
-				time.Sleep(delay * time.Second)
+				time.Sleep(Delay * time.Second)
 
 				conn, err := amqp.Dial(url)
 				if err == nil {
 					connection.Connection = conn
-					debugf("reconnect success")
+					logrus.Info("reconnect success")
 					break
 				}
 
-				debugf("reconnect failed, err: %v", err)
+				logrus.Errorf("reconnect failed, err: %v", err)
 			}
 		}
 	}()
@@ -129,8 +136,8 @@ func (ch *Channel) Consume(queue, consumer string, autoAck, exclusive, noLocal, 
 		for {
 			d, err := ch.Channel.Consume(queue, consumer, autoAck, exclusive, noLocal, noWait, args)
 			if err != nil {
-				debugf("consume failed, err: %v", err)
-				time.Sleep(delay * time.Second)
+				logrus.Errorf("consume failed, err: %v", err)
+				time.Sleep(Delay * time.Second)
 				continue
 			}
 
@@ -139,7 +146,7 @@ func (ch *Channel) Consume(queue, consumer string, autoAck, exclusive, noLocal, 
 			}
 
 			// sleep before IsClose call. closed flag may not set before sleep.
-			time.Sleep(delay * time.Second)
+			time.Sleep(Delay * time.Second)
 
 			if ch.IsClosed() {
 				break
