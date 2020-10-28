@@ -12,10 +12,10 @@ import (
 //Delay reconnect after delay seconds
 var Delay time.Duration = 3
 
-//MaxRetry max retry
-var MaxRetry = 100000000
+// //MaxRetry max retry
+// var MaxRetry = 100000000
 
-var current = 0
+// var current = 0
 
 // Connection amqp.Connection wrapper
 type Connection struct {
