@@ -72,7 +72,7 @@ func Dial(url string) (*Connection, error) {
 
 //DialConfig dial and get a reconnect connection with config
 func DialConfig(url string, config amqp.Config) (*Connection, error) {
-	conn, err := amqp.Dial(url)
+	conn, err := amqp.DialConfig(url, config)
 	if err != nil {
 		return nil, err
 	}
