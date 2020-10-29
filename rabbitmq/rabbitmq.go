@@ -38,7 +38,7 @@ func (c *Connection) Channel() (*Channel, error) {
 			reason, ok := <-channel.Channel.NotifyClose(make(chan *amqp.Error))
 			// exit this goroutine if closed by developer
 			if !ok || channel.IsClosed() {
-				logrus.Info("channel closed")
+				logrus.Debug("channel closed")
 				channel.Close() // close again, ensure closed flag set when connection closed
 				break
 			}
