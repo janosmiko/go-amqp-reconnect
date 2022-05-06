@@ -1,11 +1,11 @@
 package rabbitmq
 
 import (
+	"log"
 	"time"
 
 	"sync/atomic"
 
-	"github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 )
 
@@ -38,11 +38,11 @@ func (c *Connection) Channel() (*Channel, error) {
 			reason, ok := <-channel.Channel.NotifyClose(make(chan *amqp.Error))
 			// exit this goroutine if closed by developer
 			if !ok || channel.IsClosed() {
-				logrus.Debug("channel closed")
+				debug("channel closed")
 				channel.Close() // close again, ensure closed flag set when connection closed
 				break
 			}
-			logrus.Errorf("channel closed, reason: %v", reason)
+			log.Printf("channel closed, reason: %v", reason)
 
 			// reconnect if not closed by developer
 			for {
@@ -51,12 +51,12 @@ func (c *Connection) Channel() (*Channel, error) {
 
 				ch, err := c.Connection.Channel()
 				if err == nil {
-					logrus.Info("channel recreate success")
+					log.Printf("channel recreate success")
 					channel.Channel = ch
 					break
 				}
 
-				logrus.Errorf("channel recreate failed, err: %v", err)
+				log.Printf("channel recreate failed, err: %v", err)
 			}
 		}
 
@@ -86,10 +86,10 @@ func DialConfig(url string, config amqp.Config) (*Connection, error) {
 			reason, ok := <-connection.Connection.NotifyClose(make(chan *amqp.Error))
 			// exit this goroutine if closed by developer
 			if !ok {
-				logrus.Info("connection closed")
+				log.Printf("connection closed")
 				break
 			}
-			logrus.Errorf("connection closed, reason: %v", reason)
+			log.Printf("connection closed, reason: %v", reason)
 
 			// reconnect if not closed by developer
 			for {
@@ -99,11 +99,11 @@ func DialConfig(url string, config amqp.Config) (*Connection, error) {
 				conn, err := amqp.DialConfig(url, config)
 				if err == nil {
 					connection.Connection = conn
-					logrus.Info("reconnect success")
+					log.Printf("reconnect success")
 					break
 				}
 
-				logrus.Errorf("reconnect failed, err: %v", err)
+				log.Printf("reconnect failed, err: %v", err)
 			}
 		}
 	}()
@@ -141,7 +141,7 @@ func (ch *Channel) Consume(queue, consumer string, autoAck, exclusive, noLocal, 
 		for {
 			d, err := ch.Channel.Consume(queue, consumer, autoAck, exclusive, noLocal, noWait, args)
 			if err != nil {
-				logrus.Errorf("consume failed, err: %v", err)
+				log.Printf("consume failed, err: %v", err)
 				time.Sleep(Delay * time.Second)
 				continue
 			}
