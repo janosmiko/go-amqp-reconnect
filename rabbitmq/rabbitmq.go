@@ -2,14 +2,13 @@ package rabbitmq
 
 import (
 	"log"
+	"sync/atomic"
 	"time"
 
-	"sync/atomic"
-
-	"github.com/streadway/amqp"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-//Delay reconnect after delay seconds
+// Delay reconnect after delay seconds
 var Delay time.Duration = 3
 
 // //MaxRetry max retry
@@ -70,7 +69,7 @@ func Dial(url string) (*Connection, error) {
 	return DialConfig(url, amqp.Config{})
 }
 
-//DialConfig dial and get a reconnect connection with config
+// DialConfig dial and get a reconnect connection with config
 func DialConfig(url string, config amqp.Config) (*Connection, error) {
 	conn, err := amqp.DialConfig(url, config)
 	if err != nil {
@@ -134,7 +133,9 @@ func (ch *Channel) Close() error {
 }
 
 // Consume wrap amqp.Channel.Consume, the returned delivery will end only when channel closed by developer
-func (ch *Channel) Consume(queue, consumer string, autoAck, exclusive, noLocal, noWait bool, args amqp.Table) (<-chan amqp.Delivery, error) {
+func (ch *Channel) Consume(
+	queue, consumer string, autoAck, exclusive, noLocal, noWait bool, args amqp.Table,
+) (<-chan amqp.Delivery, error) {
 	deliveries := make(chan amqp.Delivery)
 
 	go func() {

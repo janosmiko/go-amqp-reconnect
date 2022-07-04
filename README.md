@@ -1,5 +1,5 @@
-# streadway/amqp Conneciton/Channel auto reconnect wrap
-streadway/amqp Connection/Channel does not reconnect if rabbitmq server restart/down.
+# rabbitmq/amqp-091 Connection/Channel auto reconnect wrapper
+rabbitmq/amqp-091 Connection/Channel does not reconnect if rabbitmq server restart/down.
 
 To simply developers, here is auto reconnect wrap with detail comments.
 

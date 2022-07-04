@@ -4,9 +4,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/streadway/amqp"
-
-	"github.com/techquest-tech/go-amqp-reconnect/rabbitmq"
+	"github.com/janosmiko/go-amqp-reconnect/rabbitmq"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 func main() {
@@ -41,10 +40,12 @@ func main() {
 
 	go func() {
 		for {
-			err := sendCh.Publish(exchangeName, "", false, false, amqp.Publishing{
-				ContentType: "text/plain",
-				Body:        []byte(time.Now().String()),
-			})
+			err := sendCh.Publish(
+				exchangeName, "", false, false, amqp.Publishing{
+					ContentType: "text/plain",
+					Body:        []byte(time.Now().String()),
+				},
+			)
 			log.Printf("publish, err: %v", err)
 			time.Sleep(5 * time.Second)
 		}
