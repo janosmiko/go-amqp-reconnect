@@ -10,11 +10,8 @@ import (
 
 // Delay reconnect after delay seconds
 var Delay time.Duration = 3
-
-// //MaxRetry max retry
-// var MaxRetry = 100000000
-
-// var current = 0
+var MaxRetry = 30
+var Retry = 0
 
 // Connection amqp.Connection wrapper
 type Connection struct {
@@ -45,6 +42,11 @@ func (c *Connection) Channel() (*Channel, error) {
 
 			// reconnect if not closed by developer
 			for {
+				if Retry >= MaxRetry {
+					panic("cannot open channel, max retries reached")
+				}
+				Retry++
+
 				// wait 1s for connection reconnect
 				time.Sleep(Delay * time.Second)
 
@@ -92,6 +94,11 @@ func DialConfig(url string, config amqp.Config) (*Connection, error) {
 
 			// reconnect if not closed by developer
 			for {
+				if Retry >= MaxRetry {
+					panic("cannot reconnect, max retries reached")
+				}
+				Retry++
+
 				// wait 1s for reconnect
 				time.Sleep(Delay * time.Second)
 
@@ -140,6 +147,11 @@ func (ch *Channel) Consume(
 
 	go func() {
 		for {
+			if Retry >= MaxRetry {
+				panic("cannot open consumer, max retries reached")
+			}
+			Retry++
+
 			d, err := ch.Channel.Consume(queue, consumer, autoAck, exclusive, noLocal, noWait, args)
 			if err != nil {
 				log.Printf("consume failed, err: %v", err)
